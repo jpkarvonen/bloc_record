@@ -83,7 +83,18 @@ module Selection
     rows_to_array(rows)
   end
 
+  def method_missing(method, *args)
+    find_by(extracted_attribute(method), args)
+  end
+
+
   private
+
+  def extracted_attribute(method)
+    method_parts = method.split('_')
+    attribute = method_parts[2]
+    attribute
+  end
 
   def init_object_from_row(row)
     if row
