@@ -3,9 +3,12 @@ require 'sqlite3'
 module Selection
   def find(*ids)
 
-    if id.length == 1
+    if ids.length == 1
       find_one(ids.first)
     else
+      ids.each do |id|
+        return "Error: One or more ids are invalid" if invalid_id?(id)
+      end
       rows = connection.execute <<-SQL
         SELECT #{columns.join ","} FROM #{table}
         WHERE id IN (#{ids.join(",")});
@@ -16,6 +19,7 @@ module Selection
   end
 
   def find_one(id)
+    return "Error: invalid id" if invalid_id?(id)
     row = connection.get_row <<-SQL
       SELECT #{columns.join ","} FROM #{table}
       WHERE id = #{id}
@@ -33,7 +37,22 @@ module Selection
     rows_to_array(rows)
   end
 
+  def find_each(start=1, batch_size="ALL")
+    return "Error: Please enter a number for start" if !start.is_a? Integer
+    return "Error: Invalid batch size" if !batch_size.is_a? Integer || batch_size != "ALL"
+
+    rows = connection.execute <<-SQL
+      SELECT #{columns.join ","} FROM #{table}
+      LIMIT #{batch_size} OFFSET #{start-1};
+    SQL
+    rows_to_array(rows)
+  end
+
+  def find_in_batches
+  end
+
   def take(num=1)
+    unless num.is_a? Integer return "Error: Please enter a number"
     if num > 1
       rows = connection.execute <<-SQL
         SELECT #{columns.join ","} FROM #{table}
@@ -84,11 +103,16 @@ module Selection
   end
 
   def method_missing(method, *args)
-    find_by(extracted_attribute(method), args)
+    find_by(extracted_attribut(method), args)
   end
 
 
   private
+
+  def invalid_id?(id)
+    return false if id.is_a? Integer && id >= 0
+    true
+  end
 
   def extracted_attribute(method)
     method_parts = method.split('_')
