@@ -29,6 +29,7 @@ module Selection
   end
 
   def find_by(attribute, value)
+    return "Error: invalid attribute" unless columns.include?(attribute)
     rows = connection.execute <<-SQL
       SELECT #{columns.join ","} FROM #{table}
       WHERE #{attribute} = #{BlocRecord::Utility.sql_strings(value)};
@@ -38,8 +39,8 @@ module Selection
   end
 
   def find_each(start=1, batch_size="ALL")
-    return "Error: Please enter a number for start" if !start.is_a? Integer
-    return "Error: Invalid batch size" if !batch_size.is_a? Integer || batch_size != "ALL"
+    return "Error: Please enter a number for start" unless start.is_a? Integer
+    return "Error: Invalid batch size" unless batch_size.is_a? Integer || batch_size = "ALL"
 
     rows = connection.execute <<-SQL
       SELECT #{columns.join ","} FROM #{table}
@@ -103,7 +104,7 @@ module Selection
   end
 
   def method_missing(method, *args)
-    find_by(extracted_attribut(method), args)
+    find_by(extract_attribute(method), args)
   end
 
 
@@ -114,8 +115,8 @@ module Selection
     true
   end
 
-  def extracted_attribute(method)
-    method_parts = method.split('_')
+  def extract_attribute(method)
+    method_parts = method.split('_', 3)
     attribute = method_parts[2]
     attribute
   end
