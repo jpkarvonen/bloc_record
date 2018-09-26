@@ -39,17 +39,29 @@ module Selection
   end
 
   def find_each(start=1, batch_size="ALL")
-    return "Error: Please enter a number for start" unless start.is_a? Integer
+    return "Error: Please enter a number for start, 1 or higher" unless start.is_a? Integer && start > 0
     return "Error: Invalid batch size" unless batch_size.is_a? Integer || batch_size = "ALL"
 
     rows = connection.execute <<-SQL
       SELECT #{columns.join ","} FROM #{table}
       LIMIT #{batch_size} OFFSET #{start-1};
     SQL
-    rows_to_array(rows)
+    batch_array = rows_to_array(rows)
+    0.upto(batch_array.length -1) do |index|
+      yield batch_array[index]
+    end
   end
 
-  def find_in_batches
+  def find_in_batches(start=1, batch_size="ALL")
+    return "Error: Please enter a number for start, 1 or higher" unless start.is_a? Integer && start > 0
+    return "Error: Invalid batch size" unless batch_size.is_a? Integer || batch_size = "ALL"
+
+    rows = connection.execute <<-SQL
+      SELECT #{columns.join ","} FROM #{table}
+      LIMIT #{batch_size} OFFSET #{start-1};
+    SQL
+    batch = rows_to_array(rows)
+    yield(batch)
   end
 
   def take(num=1)
