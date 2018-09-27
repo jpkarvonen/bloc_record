@@ -38,9 +38,9 @@ module Selection
     rows_to_array(rows)
   end
 
-  def find_each(start=1, batch_size="ALL")
+  def find_each(start=1, batch_size=100)
     return "Error: Please enter a number for start, 1 or higher" unless start.is_a? Integer && start > 0
-    return "Error: Invalid batch size" unless batch_size.is_a? Integer || batch_size = "ALL"
+    return "Error: Invalid batch size" unless batch_size.is_a? Integer
 
     rows = connection.execute <<-SQL
       SELECT #{columns.join ","} FROM #{table}
@@ -52,9 +52,9 @@ module Selection
     end
   end
 
-  def find_in_batches(start=1, batch_size="ALL")
+  def find_in_batches(start=1, batch_size=100)
     return "Error: Please enter a number for start, 1 or higher" unless start.is_a? Integer && start > 0
-    return "Error: Invalid batch size" unless batch_size.is_a? Integer || batch_size = "ALL"
+    return "Error: Invalid batch size" unless batch_size.is_a? Integer
 
     rows = connection.execute <<-SQL
       SELECT #{columns.join ","} FROM #{table}
@@ -128,9 +128,7 @@ module Selection
   end
 
   def extract_attribute(method)
-    method_parts = method.split('_', 3)
-    attribute = method_parts[2]
-    attribute
+    method.to_s.split('_', 3)[2]
   end
 
   def init_object_from_row(row)
