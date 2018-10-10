@@ -6,15 +6,15 @@ module BlocRecord
     end
 
     def take(num=1)
-      self.any? ? self.first.class.take(num) : false
+      self.any? ? self.first.take(num) : false
     end
 
     def where(*args)
-      self.any? ? self.first.class.where(args) : false
+      self.any? ? self.first.where(args) : false
     end
 
     def where_not(*args)
-      self.any? ? self.first.class.where(true, args) : false
+      self.any? ? self.first.where(true, args) : false
     end
   end
 end
