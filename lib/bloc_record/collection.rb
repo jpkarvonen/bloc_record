@@ -14,7 +14,7 @@ module BlocRecord
     end
 
     def where_not(*args)
-      self.any? ? self.first.where(true, args) : false
+      self.any? ? self.first.where_not(args) : false
     end
   end
 end

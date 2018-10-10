@@ -71,7 +71,6 @@ module Selection
         SELECT #{columns.join ","} FROM #{table}
         ORDER BY random()
         LIMIT #{num}
-    end
       SQL
 
       rows_to_array(rows)
@@ -126,7 +125,7 @@ module Selection
     end
   end
 
-  def where(not=false, *args)
+  def where(*args)
     if args.count > 1
       expression = args.shift
       params = args
@@ -140,23 +139,36 @@ module Selection
       end
     end
 
-    if not == true
-      sql = <<-SQL
-        SELECT #{columns.join ","} FROM #{table}
-        WHERE NOT #{expression};
-      SQL
+    sql = <<-SQL
+      SELECT #{columns.join ","} FROM #{table}
+      WHERE #{expression};
+    SQL
 
-      rows = connection.execute(sql, params)
-      rows_to_array(rows)
+    rows = connection.execute(sql, params)
+    rows_to_array(rows)
+  end
+
+  def where_not(*args)
+    if args.count > 1
+      expression = args.shift
+      params = args
     else
-      sql = <<-SQL
-        SELECT #{columns.join ","} FROM #{table}
-        WHERE #{expression};
-      SQL
-
-      rows = connection.execute(sql, params)
-      rows_to_array(rows)
+      case args.first
+      when String
+        expression = args.first
+      when Hash
+        expression_hash = BlocRecord::Utility.convert_keys(args.first)
+        expression = expression_hash.map {|key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
+      end
     end
+
+    sql = <<-SQL
+      SELECT #{columns.join ","} FROM #{table}
+      WHERE NOT #{expression};
+    SQL
+
+    rows = connection.execute(sql, params)
+    rows_to_array(rows)
   end
 
   def order(*args)
