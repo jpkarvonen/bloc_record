@@ -117,10 +117,16 @@ module Selection
   end
 
   def method_missing(method, *args)
-    find_by(extract_attribute(method), args)
+    if method_type(method) == 'find'
+      find_by(extract_attribute(method), args)
+    elsif method_type(method) == 'update'
+      update(extract_attribute(method), args)
+    else
+      puts "Error: invalid method"
+    end
   end
 
-  def where(*args)
+  def where(not=false, *args)
     if args.count > 1
       expression = args.shift
       params = args
@@ -134,13 +140,23 @@ module Selection
       end
     end
 
-    sql = <<-SQL
-      SELECT #{columns.join ","} FROM #{table}
-      WHERE #{expression};
-    SQL
+    if not == true
+      sql = <<-SQL
+        SELECT #{columns.join ","} FROM #{table}
+        WHERE NOT #{expression};
+      SQL
 
-    rows = connection.execute(sql, params)
-    rows_to_array(rows)
+      rows = connection.execute(sql, params)
+      rows_to_array(rows)
+    else
+      sql = <<-SQL
+        SELECT #{columns.join ","} FROM #{table}
+        WHERE #{expression};
+      SQL
+
+      rows = connection.execute(sql, params)
+      rows_to_array(rows)
+    end
   end
 
   def order(*args)
@@ -205,7 +221,13 @@ module Selection
   end
 
   def extract_attribute(method)
-    method.to_s.split('_', 3)[2]
+    if method_type(method) == 'find'
+      method.to_s.split('_', 3)[2]
+    elsif method_type(method) == 'update'
+      method.to_s.split('_', 2)[1]
+    else
+      puts "Error: invalid method"
+    end
   end
 
   def init_object_from_row(row)
@@ -217,8 +239,8 @@ module Selection
 
 
   def rows_to_array(rows)
-    rows.map { |row| new(Hash[columns.zip(row)]) }
+    collection = BlocRecord::Collection.new
+    rows.each { |row| collection << new(Hash[columns.zip(row)]) }
+    collection
   end
-
-
 end
