@@ -71,7 +71,6 @@ module Selection
         SELECT #{columns.join ","} FROM #{table}
         ORDER BY random()
         LIMIT #{num}
-    end
       SQL
 
       rows_to_array(rows)
@@ -117,7 +116,13 @@ module Selection
   end
 
   def method_missing(method, *args)
-    find_by(extract_attribute(method), args)
+    if method_type(method) == 'find'
+      find_by(extract_attribute(method), args)
+    elsif method_type(method) == 'update'
+      update(extract_attribute(method), args)
+    else
+      puts "Error: invalid method"
+    end
   end
 
   def where(*args)
@@ -137,6 +142,29 @@ module Selection
     sql = <<-SQL
       SELECT #{columns.join ","} FROM #{table}
       WHERE #{expression};
+    SQL
+
+    rows = connection.execute(sql, params)
+    rows_to_array(rows)
+  end
+
+  def where_not(*args)
+    if args.count > 1
+      expression = args.shift
+      params = args
+    else
+      case args.first
+      when String
+        expression = args.first
+      when Hash
+        expression_hash = BlocRecord::Utility.convert_keys(args.first)
+        expression = expression_hash.map {|key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
+      end
+    end
+
+    sql = <<-SQL
+      SELECT #{columns.join ","} FROM #{table}
+      WHERE NOT #{expression};
     SQL
 
     rows = connection.execute(sql, params)
@@ -205,7 +233,13 @@ module Selection
   end
 
   def extract_attribute(method)
-    method.to_s.split('_', 3)[2]
+    if method_type(method) == 'find'
+      method.to_s.split('_', 3)[2]
+    elsif method_type(method) == 'update'
+      method.to_s.split('_', 2)[1]
+    else
+      puts "Error: invalid method"
+    end
   end
 
   def init_object_from_row(row)
@@ -217,8 +251,8 @@ module Selection
 
 
   def rows_to_array(rows)
-    rows.map { |row| new(Hash[columns.zip(row)]) }
+    collection = BlocRecord::Collection.new
+    rows.each { |row| collection << new(Hash[columns.zip(row)]) }
+    collection
   end
-
-
 end
