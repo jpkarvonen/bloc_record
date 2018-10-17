@@ -139,7 +139,9 @@ module Selection
     SQL
 
     rows = connection.execute(sql, params)
+
     rows_to_array(rows)
+
   end
 
   def where_not(*args)

@@ -16,5 +16,10 @@ module BlocRecord
     def where_not(*args)
       self.any? ? self.first.class.where_not(args) : false
     end
+
+    def destroy_all
+      ids = self.map(&:id)
+      self.any? ? self.first.class.destroy(ids) : false
+    end
   end
 end
