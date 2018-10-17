@@ -116,13 +116,7 @@ module Selection
   end
 
   def method_missing(method, *args)
-    if method_type(method) == 'find'
-      find_by(extract_attribute(method), args)
-    elsif method_type(method) == 'update'
-      update(extract_attribute(method), args)
-    else
-      puts "Error: invalid method"
-    end
+    find_by(extract_attribute(method), args)
   end
 
   def where(*args)
@@ -233,13 +227,7 @@ module Selection
   end
 
   def extract_attribute(method)
-    if method_type(method) == 'find'
-      method.to_s.split('_', 3)[2]
-    elsif method_type(method) == 'update'
-      method.to_s.split('_', 2)[1]
-    else
-      puts "Error: invalid method"
-    end
+    method.to_s.split('_', 3)[2]
   end
 
   def init_object_from_row(row)

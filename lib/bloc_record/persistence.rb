@@ -36,6 +36,17 @@ module Persistence
     self.class.update(self.id, updates)
   end
 
+  def method_missing(method, *args)
+    update_attribute(extract_attribute(method), args)
+  end
+
+  private
+
+  def extract_attribute(method)
+    method.to_s.split('_', 2)[1]
+  end
+
+
   module ClassMethods
      def create(attrs)
        attrs = BlocRecord::Utility.convert_keys(attrs)
