@@ -1,3 +1,3 @@
-# bloc_record
+# BlocRecord
 
-A custom ORM, similar to ActiveRecord, built with Ruby. 
+A custom ORM, similar to ActiveRecord, built with Ruby.

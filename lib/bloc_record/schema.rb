@@ -1,4 +1,5 @@
 require 'sqlite3'
+require 'pg'
 require_relative 'utility'
 
 module Schema
