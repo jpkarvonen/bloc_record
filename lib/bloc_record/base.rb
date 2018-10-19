@@ -4,6 +4,7 @@ require_relative 'persistence'
 require_relative 'selection'
 require_relative 'connection'
 require_relative 'collection'
+require_relative 'associations'
 
 module BlocRecord
   class Base
@@ -11,7 +12,7 @@ module BlocRecord
     extend Selection
     extend Schema
     extend Connection
-
+    extend Associations
 
     def initialize(options={})
       options = BlocRecord::Utility.convert_keys(options)
