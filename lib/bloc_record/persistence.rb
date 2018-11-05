@@ -1,4 +1,5 @@
 require 'sqlite3'
+require 'pg'
 require_relative 'schema'
 
 module Persistence
@@ -19,7 +20,7 @@ module Persistence
 
     fields = self.class.attributes.map { |col| "#{col}=#{BlocRecord::Utility.sql_strings(self.instance_variable_get("@#{col}"))}" }.join(",")
 
-    self.class.connection.execute <<-SQL
+    self.class.execute <<-SQL
       UPDATE #{self.class.table}
       SET #{fields}
       WHERE id = #{self.id};
@@ -57,13 +58,13 @@ module Persistence
        attrs.delete "id"
        vals = attributes.map { |key| BlocRecord::Utility.sql_strings(attrs[key]) }
 
-       connection.execute <<-SQL
+       execute <<-SQL
          INSERT INTO #{table} (#{attributes.join ","})
          VALUES (#{vals.join ","});
        SQL
 
        data = Hash[attributes.zip attrs.values]
-       data["id"] = connection.execute("SELECT last_insert_rowid();")[0][0]
+       data["id"] = execute("SELECT last_insert_rowid();")[0][0]
        new(data)
     end
 
@@ -77,7 +78,7 @@ module Persistence
 
         0.upto(ids.length - 1) do |i|
           where_clause = "WHERE id = #{ids[i]};"
-          connection.execute <<-SQL
+          execute <<-SQL
             UPDATE #{table}
             SET #{updates[i].join("")} #{where_clause}
           SQL
@@ -96,7 +97,7 @@ module Persistence
           where_clause = ";"
         end
 
-        connection.execute <<-SQL
+        execute <<-SQL
           UPDATE #{table}
           SET #{updates_array * ","} #{where_clause}
         SQL
@@ -116,7 +117,7 @@ module Persistence
         where_clause = "WHERE id = #{id.first};"
       end
 
-      connection.execute <<-SQL
+      execute <<-SQL
         DELETE FROM #{table}
         #{where_clause}
       SQL
@@ -126,7 +127,7 @@ module Persistence
 
     def destroy_all(conditions_args=nil)
       if !conditions_args
-        return connection.execute <<-SQL
+        return execute <<-SQL
           DELETE FROM #{table}
         SQL
 
@@ -140,7 +141,7 @@ module Persistence
         conditions = condition_args.join(" and ")
       end
 
-      connection.execute <<-SQL
+      execute <<-SQL
         DELETE FROM #{table}
         WHERE #{conditions}
       SQL
